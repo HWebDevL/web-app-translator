@@ -1,18 +1,18 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask, request, render_template, jsonify
-
 import requests
+
+load_dotenv() 
 
 app = Flask(__name__)
 
 
-
-url = "https://free-google-translator.p.rapidapi.com/external-api/free-google-translator"
-
-
+URL = os.getenv("URL")
 headers = {
-	"x-rapidapi-key": "77a92e2df3msha67fe6d19266125p110a17jsn4520546fe8b2",
-	"x-rapidapi-host": "free-google-translator.p.rapidapi.com",
-	"Content-Type": "application/json"
+    "x-rapidapi-key": os.getenv("RAPID_API_KEY"),
+    "x-rapidapi-host": os.getenv("RAPID_API_HOST"),
+    "Content-Type": os.getenv("CONTENT_TYPE")
 }
 
 @app.route("/")
@@ -35,4 +35,5 @@ def translate():
 
 
 if __name__ == "__main__":
+
     app.run()
