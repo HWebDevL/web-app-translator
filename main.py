@@ -28,7 +28,7 @@ def translate():
         "query": data.get("text")
     }
     payload = {"translate": "rapidapi"}
-    response = requests.post(url, json=payload, headers=headers, params=querystring)
+    response = requests.post(URL, json=payload, headers=headers, params=querystring)
     translated_text = response.json()["translation"]
     return jsonify({"translated_text": translated_text})
 
@@ -37,3 +37,4 @@ def translate():
 if __name__ == "__main__":
 
     app.run()
+
