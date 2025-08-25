@@ -33,7 +33,7 @@ def translate():
     payload = {"translate": "rapidapi"}
     try:
         response = requests.post(URL, json=payload, headers=headers, params=querystring, timeout=5)
-        response.raise_for_status()  # Raises HTTPError for bad status codes
+        response.raise_for_status() 
         json_data = response.json()
         translated_text = json_data["translation"]
         if not translated_text:
@@ -47,3 +47,4 @@ def translate():
 
 if __name__ == "__main__":
     app.run()
+
