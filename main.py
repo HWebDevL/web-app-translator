@@ -1,18 +1,21 @@
+from flask import Flask, request, render_template, jsonify
 import os
 from dotenv import load_dotenv
-from flask import Flask, request, render_template, jsonify
 import requests
-
-load_dotenv() 
 
 app = Flask(__name__)
 
+load_dotenv()
 
+RAPID_API_KEY = os.getenv("RAPID_API_KEY")
+RAPID_API_HOST = os.getenv("RAPID_API_HOST")
+CONTENT_TYPE = os.getenv("CONTENT_TYPE")
 URL = os.getenv("URL")
+
 headers = {
-    "x-rapidapi-key": os.getenv("RAPID_API_KEY"),
-    "x-rapidapi-host": os.getenv("RAPID_API_HOST"),
-    "Content-Type": os.getenv("CONTENT_TYPE")
+    "x-rapidapi-key": RAPID_API_KEY,
+    "x-rapidapi-host": RAPID_API_HOST,
+    "Content-Type": CONTENT_TYPE
 }
 
 @app.route("/")
@@ -28,14 +31,19 @@ def translate():
         "query": data.get("text")
     }
     payload = {"translate": "rapidapi"}
-    response = requests.post(URL, json=payload, headers=headers, params=querystring)
-    translated_text = response.json().get("translation", "")
+    try:
+        response = requests.post(URL, json=payload, headers=headers, params=querystring, timeout=5)
+        response.raise_for_status() 
+        json_data = response.json()
+        translated_text = json_data.get("translation", "")
+        if not translated_text:
+            raise ValueError("Translation not found in API response")
+    except Exception as e:
+        translated_text = f"Error: {str(e)}"
+
     return jsonify({"translated_text": translated_text})
 
 
 
 if __name__ == "__main__":
-
     app.run()
-
-
