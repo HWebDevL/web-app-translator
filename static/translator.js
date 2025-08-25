@@ -6,7 +6,7 @@ themeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     const theme = btn.getAttribute('data-theme');
     if (theme === 'auto') {
-      html.removeAttribute('data-bs-theme'); // fallback to system
+      html.removeAttribute('data-bs-theme'); 
     } else {
       html.setAttribute('data-bs-theme', theme);
     }
@@ -70,7 +70,7 @@ autoDetectCheckbox.addEventListener("change", () => {
   if (autoDetectCheckbox.checked) {
     fromSelect.value = "auto";
   } else {
-    if (fromSelect.value === "auto") fromSelect.selectedIndex = 1; // first real language
+    if (fromSelect.value === "auto") fromSelect.selectedIndex = 1;
   }
 });
 
@@ -132,3 +132,4 @@ sourceText.addEventListener("input", () => {
 
 // ---------- INIT ----------
 updateCharCount();
+
