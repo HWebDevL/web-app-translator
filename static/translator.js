@@ -1,109 +1,134 @@
+// ---------- THEME TOGGLE ----------
 const html = document.documentElement;
 const themeButtons = document.querySelectorAll('[data-theme]');
 
 themeButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     const theme = btn.getAttribute('data-theme');
-
-    if(theme === 'auto') {
-      html.removeAttribute('data-bs-theme'); // fallback to system preference
+    if (theme === 'auto') {
+      html.removeAttribute('data-bs-theme'); // fallback to system
     } else {
       html.setAttribute('data-bs-theme', theme);
     }
   });
 });
-// Grab all elements
+
+// ---------- ELEMENTS ----------
 const sourceText = document.querySelector(".translator-source-text");
 const targetText = document.querySelector(".translator-target-text");
-const fromLangSelect = document.querySelector(".translator-from-lang");
-const toLangSelect = document.querySelector(".translator-to-lang");
+const fromSelect = document.querySelector(".translator-from-lang");
+const toSelect = document.querySelector(".translator-to-lang");
 const translateBtn = document.querySelector(".translator-translate-btn");
-const clearSourceBtn = document.querySelector(".translator-clear-source");
-const copyBtn = document.querySelectorAll(".translator-copy-btn");
+const clearBtn = document.querySelector(".translator-clear-source");
+const copyBtns = document.querySelectorAll(".translator-copy-btn");
 const swapBtn = document.querySelector(".translator-swap-btn");
 const charCount = document.querySelector(".translator-char-count");
 const sampleBtns = document.querySelectorAll(".translator-sample-btn");
 const autoDetectCheckbox = document.querySelector(".translator-auto-detect");
 const instantTranslateCheckbox = document.querySelector(".translator-instant-translate");
 
-// Function to update character count
+// ---------- CHARACTER COUNT ----------
 const updateCharCount = () => {
-    charCount.innerText = `${sourceText.value.length} characters`;
+  charCount.innerText = `${sourceText.value.length} characters`;
 };
 
-// Swap languages
+// ---------- SWAP LANGUAGES ----------
 swapBtn.addEventListener("click", () => {
-    const temp = fromLangSelect.value;
-    fromLangSelect.value = toLangSelect.value;
-    toLangSelect.value = temp;
+  const temp = fromSelect.value;
+  fromSelect.value = toSelect.value;
+  toSelect.value = temp;
 });
 
-// Clear source text
-clearSourceBtn.addEventListener("click", () => {
-    sourceText.value = "";
-    updateCharCount();
+// ---------- CLEAR SOURCE ----------
+clearBtn.addEventListener("click", () => {
+  sourceText.value = "";
+  updateCharCount();
+  targetText.value = "";
 });
 
-// Copy target text
-copyBtn.forEach(btn => {
-    btn.addEventListener("click", () => {
-        targetText.select();
-        navigator.clipboard.writeText(targetText.value)
-            .then(() => alert("Copied to clipboard!"))
-            .catch(err => console.error(err));
-    });
+// ---------- COPY TO CLIPBOARD ----------
+copyBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    targetText.select();
+    navigator.clipboard.writeText(targetText.value)
+      .then(() => alert("Copied to clipboard!"))
+      .catch(err => console.error(err));
+  });
 });
 
-// Insert sample text into source
+// ---------- SAMPLE TEXTS ----------
 sampleBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-        sourceText.value = btn.dataset.text;
-        updateCharCount();
-        if (instantTranslateCheckbox.checked) {
-            translateText();
-        }
-    });
+  btn.addEventListener("click", () => {
+    sourceText.value = btn.dataset.text;
+    updateCharCount();
+    if (instantTranslateCheckbox.checked) translateText();
+  });
 });
 
-// Translate function
+// ---------- AUTO-DETECT SYNC ----------
+autoDetectCheckbox.addEventListener("change", () => {
+  if (autoDetectCheckbox.checked) {
+    fromSelect.value = "auto";
+  } else {
+    if (fromSelect.value === "auto") fromSelect.selectedIndex = 1; // first real language
+  }
+});
+
+fromSelect.addEventListener("change", () => {
+  if (fromSelect.value !== "auto") {
+    autoDetectCheckbox.checked = false;
+  } else {
+    autoDetectCheckbox.checked = true;
+  }
+});
+
+// ---------- TRANSLATE FUNCTION ----------
 const translateText = async () => {
-    const textToTranslate = sourceText.value.trim();
-    if (!textToTranslate) {
-        targetText.value = "";
-        return;
+  const textToTranslate = sourceText.value.trim();
+  if (!textToTranslate) {
+    targetText.value = "";
+    return;
+  }
+
+  // Show detecting if auto
+  if (autoDetectCheckbox.checked) {
+    fromSelect.querySelector('option[value="auto"]').textContent = "Detecting language...";
+  }
+
+  const payload = {
+    text: textToTranslate,
+    from: autoDetectCheckbox.checked ? "auto" : fromSelect.value,
+    to: toSelect.value
+  };
+
+  targetText.value = "Translating...";
+
+  try {
+    const response = await fetch("/translate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    targetText.value = data.translated_text || "Translation failed!";
+  } catch (err) {
+    console.error(err);
+    targetText.value = "Error connecting to server!";
+  } finally {
+    // Reset auto-detect option text
+    if (autoDetectCheckbox.checked) {
+      fromSelect.querySelector('option[value="auto"]').textContent = "Detect language";
     }
-
-    const payload = {
-        text: textToTranslate,
-        from: autoDetectCheckbox.checked ? "auto" : fromLangSelect.value,
-        to: toLangSelect.value
-    };
-
-    targetText.value = "Translating...";
-
-    try {
-        const response = await fetch("/translate", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        targetText.value = data.translated_text || "Translation failed!";
-    } catch (error) {
-        console.error(error);
-        targetText.value = "Error connecting to server!";
-    }
+  }
 };
 
-// Translate button click
+// ---------- BUTTON & INSTANT TRANSLATE ----------
 translateBtn.addEventListener("click", translateText);
 
-// Instant translate as you type
 sourceText.addEventListener("input", () => {
-    updateCharCount();
-    if (instantTranslateCheckbox.checked) {
-        translateText();
-    }
+  updateCharCount();
+  if (instantTranslateCheckbox.checked) translateText();
 });
 
-
+// ---------- INIT ----------
+updateCharCount();
