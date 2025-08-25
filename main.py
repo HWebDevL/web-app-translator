@@ -33,9 +33,9 @@ def translate():
     payload = {"translate": "rapidapi"}
     try:
         response = requests.post(URL, json=payload, headers=headers, params=querystring, timeout=5)
-        response.raise_for_status() 
+        response.raise_for_status()  # Raises HTTPError for bad status codes
         json_data = response.json()
-        translated_text = json_data.get("translation", "")
+        translated_text = json_data["translation"]
         if not translated_text:
             raise ValueError("Translation not found in API response")
     except Exception as e:
